@@ -1,11 +1,25 @@
 import { useState } from 'react'
 import { Tag, Plus, Trash2, Package } from 'lucide-react'
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
 import type { Product, Category } from '../types'
 import { categoriesApi } from '../api'
 
 interface CategoriesPageProps {
   categories: Category[]
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>
+<<<<<<< HEAD
+=======
+=======
+import type { Product } from '../types'
+
+interface CategoriesPageProps {
+  categories: string[]
+  setCategories: React.Dispatch<React.SetStateAction<string[]>>
+>>>>>>> origin/main
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
   products: Product[]
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void
 }
@@ -14,6 +28,10 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
   const [newCategory, setNewCategory] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
   function countProducts(catName: string) {
     return products.filter((p) => p.category === catName).length
   }
@@ -53,6 +71,37 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
     } finally {
       setConfirmDelete(null)
     }
+<<<<<<< HEAD
+=======
+=======
+  function countProducts(cat: string) {
+    return products.filter((p) => p.category === cat).length
+  }
+
+  function handleAdd() {
+    const name = newCategory.trim()
+    if (!name) return
+    if (categories.some((c) => c.toLowerCase() === name.toLowerCase())) {
+      showToast('Esa categoría ya existe', 'error')
+      return
+    }
+    setCategories((prev) => [...prev, name])
+    setNewCategory('')
+    showToast('Categoría agregada', 'success')
+  }
+
+  function handleDelete(cat: string) {
+    const inUse = countProducts(cat)
+    if (inUse > 0) {
+      showToast(`No puedes eliminar "${cat}": tiene ${inUse} producto(s) asignado(s)`, 'error')
+      setConfirmDelete(null)
+      return
+    }
+    setCategories((prev) => prev.filter((c) => c !== cat))
+    setConfirmDelete(null)
+    showToast('Categoría eliminada', 'info')
+>>>>>>> origin/main
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
   }
 
   return (
@@ -99,21 +148,50 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
         ) : (
           <div className="divide-y divide-stone-50">
             {categories.map((cat) => (
+<<<<<<< HEAD
               <div key={cat.id} className="flex items-center justify-between px-6 py-4 hover:bg-stone-50/60 transition-colors group">
+=======
+<<<<<<< HEAD
+              <div key={cat.id} className="flex items-center justify-between px-6 py-4 hover:bg-stone-50/60 transition-colors group">
+=======
+              <div key={cat} className="flex items-center justify-between px-6 py-4 hover:bg-stone-50/60 transition-colors group">
+>>>>>>> origin/main
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center shrink-0">
                     <Tag size={14} className="text-stone-400" />
                   </div>
                   <div>
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
                     <p className="text-[13px] font-medium text-stone-700">{cat.name}</p>
                     <p className="text-[11.5px] text-stone-400 flex items-center gap-1 mt-0.5">
                       <Package size={11} />
                       {countProducts(cat.name)} producto(s)
+<<<<<<< HEAD
+=======
+=======
+                    <p className="text-[13px] font-medium text-stone-700">{cat}</p>
+                    <p className="text-[11.5px] text-stone-400 flex items-center gap-1 mt-0.5">
+                      <Package size={11} />
+                      {countProducts(cat)} producto(s)
+>>>>>>> origin/main
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
                     </p>
                   </div>
                 </div>
 
+<<<<<<< HEAD
                 {confirmDelete === cat.id ? (
+=======
+<<<<<<< HEAD
+                {confirmDelete === cat.id ? (
+=======
+                {confirmDelete === cat ? (
+>>>>>>> origin/main
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
                   <div className="flex items-center gap-2">
                     <span className="text-[12px] text-stone-500">¿Eliminar?</span>
                     <button
@@ -131,7 +209,15 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
                   </div>
                 ) : (
                   <button
+<<<<<<< HEAD
                     onClick={() => setConfirmDelete(cat.id)}
+=======
+<<<<<<< HEAD
+                    onClick={() => setConfirmDelete(cat.id)}
+=======
+                    onClick={() => setConfirmDelete(cat)}
+>>>>>>> origin/main
+>>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
                     className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
                     title="Eliminar categoría"
                   >
