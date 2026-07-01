@@ -1,7 +1,9 @@
 import type { Product, Category } from './types'
 
-// En dev, Vite hace proxy de /api hacia el backend (ver vite.config.ts)
-const BASE_URL = '/api'
+// En dev, Vite hace proxy de /api hacia el backend (ver vite.config.ts).
+// En producción (Render), se usa la URL completa del backend definida
+// en la variable de entorno VITE_API_URL.
+const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 
 type RawDoc = { _id: string; [key: string]: unknown }
 
