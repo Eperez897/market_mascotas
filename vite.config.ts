@@ -7,6 +7,7 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+<<<<<<< HEAD
   server: {
     proxy: {
       '/api': {
@@ -15,6 +16,8 @@ export default defineConfig({
       },
     },
   },
+=======
+>>>>>>> origin/main
   preview: {
     allowedHosts: [
       'market-mascotas-sfs5.onrender.com'

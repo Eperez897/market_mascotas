@@ -5,7 +5,11 @@ import type { Product } from '../types'
 interface ProductModalProps {
   product?: Product | null
   categories: string[]
+<<<<<<< HEAD
   onSave: (data: Omit<Product, 'id'> & { id?: string }) => void
+=======
+  onSave: (data: Omit<Product, 'id'> & { id?: number }) => void
+>>>>>>> origin/main
   onClose: () => void
 }
 

@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Market Mascotas — Ahora con MongoDB (NoSQL)
 
 Este proyecto pasó de manejar los datos solo en memoria (React `useState`) a
@@ -68,6 +69,8 @@ relacionadas por llaves foráneas.
 
 ---
 
+=======
+>>>>>>> origin/main
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

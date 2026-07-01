@@ -3,7 +3,10 @@ import { Search, Plus, Package, Pencil, Trash2 } from 'lucide-react'
 import { formatCLP, type Product } from '../types'
 import { ProductModal } from './ProductModal'
 import { DeleteProductModal } from './DeleteProductModal'
+<<<<<<< HEAD
 import { productsApi } from '../api'
+=======
+>>>>>>> origin/main
 
 interface StockBarProps {
   value: number
@@ -46,6 +49,7 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
       p.category.toLowerCase().includes(search.toLowerCase())
   )
 
+<<<<<<< HEAD
   async function handleSave(data: Omit<Product, 'id'> & { id?: string }) {
     try {
       if (data.id) {
@@ -76,6 +80,24 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
     } finally {
       setModal(null)
     }
+=======
+  function handleSave(data: Omit<Product, 'id'> & { id?: number }) {
+    if (data.id) {
+      setProducts((prev) => prev.map((p) => (p.id === data.id ? { ...p, ...data, id: data.id! } : p)))
+      showToast('Producto actualizado', 'success')
+    } else {
+      setProducts((prev) => [...prev, { ...data, id: Date.now() }])
+      showToast('Producto agregado', 'success')
+    }
+    setModal(null)
+  }
+
+  function handleDelete() {
+    if (modal?.mode !== 'delete') return
+    setProducts((prev) => prev.filter((p) => p.id !== modal.product.id))
+    showToast('Producto eliminado', 'info')
+    setModal(null)
+>>>>>>> origin/main
   }
 
   return (
