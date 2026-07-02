@@ -5,16 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-<<<<<<< HEAD
     "server": "npm run dev --prefix server",
     "dev:all": "concurrently -n FRONTEND,BACKEND -c blue,green \"npm run dev\" \"npm run server\"",
-=======
-<<<<<<< HEAD
-    "server": "npm run dev --prefix server",
-    "dev:all": "concurrently -n FRONTEND,BACKEND -c blue,green \"npm run dev\" \"npm run server\"",
-=======
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -27,14 +19,7 @@
     "serve": "^14.2.0"
   },
   "devDependencies": {
-<<<<<<< HEAD
     "concurrently": "^8.2.2",
-=======
-<<<<<<< HEAD
-    "concurrently": "^8.2.2",
-=======
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
     "@eslint/js": "^10.0.1",
     "@tailwindcss/vite": "^4.1.11",
     "@types/node": "^24.12.3",
