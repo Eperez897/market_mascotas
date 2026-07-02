@@ -1,12 +1,4 @@
-<<<<<<< HEAD
 import { useEffect, useState } from 'react'
-=======
-<<<<<<< HEAD
-import { useEffect, useState } from 'react'
-=======
-import { useState } from 'react'
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
 import { DollarSign, ShoppingBag, Users, Package, MoreHorizontal } from 'lucide-react'
 import { Sidebar } from './components/Sidebar'
 import { Header } from './components/Header'
@@ -18,17 +10,8 @@ import { ActivityFeed } from './components/ActivityFeed'
 import { ProductsPage } from './components/ProductsPage'
 import { CategoriesPage } from './components/CategoriesPage'
 import { Toast } from './components/Toast'
-<<<<<<< HEAD
 import type { Product, Category } from './types'
 import { productsApi, categoriesApi } from './api'
-=======
-<<<<<<< HEAD
-import type { Product, Category } from './types'
-import { productsApi, categoriesApi } from './api'
-=======
-import { DEFAULT_CATEGORIES, type Product } from './types'
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
 
 function PlaceholderPage({ name }: { name: string }) {
   return (
@@ -95,17 +78,8 @@ function DashboardPage({ products }: { products: Product[] }) {
 
 function App() {
   const [products, setProducts] = useState<Product[]>([])
-<<<<<<< HEAD
   const [categories, setCategories] = useState<Category[]>([])
   const [loading, setLoading] = useState(true)
-=======
-<<<<<<< HEAD
-  const [categories, setCategories] = useState<Category[]>([])
-  const [loading, setLoading] = useState(true)
-=======
-  const [categories, setCategories] = useState<string[]>(DEFAULT_CATEGORIES)
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
   const [activePage, setActivePage] = useState('Panel principal')
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null)
 
@@ -114,10 +88,6 @@ function App() {
     setTimeout(() => setToast(null), 2500)
   }
 
-<<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
   // Carga inicial de datos desde MongoDB a través de la API
   useEffect(() => {
     async function loadData() {
@@ -149,12 +119,6 @@ function App() {
       )
     }
 
-<<<<<<< HEAD
-=======
-=======
-  function renderPage() {
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
     switch (activePage) {
       case 'Panel principal':
         return <DashboardPage products={products} />
@@ -163,15 +127,7 @@ function App() {
           <ProductsPage
             products={products}
             setProducts={setProducts}
-<<<<<<< HEAD
             categories={categoryNames}
-=======
-<<<<<<< HEAD
-            categories={categoryNames}
-=======
-            categories={categories}
->>>>>>> origin/main
->>>>>>> d2f90cedf1ae15b6a4be2def582eb7f514bb1e43
             showToast={showToast}
           />
         )
