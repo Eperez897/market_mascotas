@@ -1,95 +1,89 @@
 import {
-  LayoutDashboard,
-  Package,
-  ShoppingCart,
-  Users,
-  Tag,
-  BarChart2,
-  Settings,
-  PawPrint,
-  LogOut,
-  ChevronRight,
+  LayoutDashboard, Package, Tag, ShoppingCart, FileText,
+  DollarSign, Users, LogOut, PawPrint,
 } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
 
-interface NavItem {
-  icon: React.ReactNode
-  label: string
-  badge?: number
-}
-
-const navItems: NavItem[] = [
-  { icon: <LayoutDashboard size={18} />, label: 'Panel principal' },
-  { icon: <Package size={18} />, label: 'Productos' },
-  { icon: <ShoppingCart size={18} />, label: 'Pedidos', badge: 5 },
-  { icon: <Users size={18} />, label: 'Clientes' },
-  { icon: <Tag size={18} />, label: 'Categorías' },
-  { icon: <BarChart2 size={18} />, label: 'Reportes' },
-  { icon: <Settings size={18} />, label: 'Configuración' },
+const NAV_ITEMS = [
+  { label: 'Panel principal', icon: LayoutDashboard },
+  { label: 'Productos', icon: Package },
+  { label: 'Categorías', icon: Tag },
+  { label: 'Lista de precios', icon: DollarSign },
+  { label: 'Facturas', icon: FileText },
+  { label: 'Punto de venta', icon: ShoppingCart },
 ]
 
-interface SidebarProps {
+interface Props {
   activePage: string
   setActivePage: (page: string) => void
 }
 
-export function Sidebar({ activePage, setActivePage }: SidebarProps) {
+export function Sidebar({ activePage, setActivePage }: Props) {
+  const { user, isAdmin, logout } = useAuth()
+
   return (
-    <aside className="w-60 min-h-screen bg-white border-r border-stone-200 flex flex-col shrink-0">
+    <aside className="w-56 min-h-screen bg-white border-r border-stone-200 flex flex-col">
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-stone-100">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-stone-800 flex items-center justify-center">
-            <PawPrint size={16} className="text-amber-400" />
-          </div>
-          <div>
-            <p className="text-[13px] font-semibold text-stone-800 leading-none">Market</p>
-            <p className="text-[11px] text-stone-400 leading-none mt-0.5">Mascotas</p>
-          </div>
+      <div className="flex items-center gap-2.5 px-5 py-5 border-b border-stone-100">
+        <div className="w-8 h-8 bg-amber-400 rounded-xl flex items-center justify-center">
+          <PawPrint size={16} className="text-white" />
         </div>
+        <span className="text-[14px] font-semibold text-stone-800">Market Mascotas</span>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 space-y-0.5">
-        <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest px-2 mb-3">
-          Menú
-        </p>
-        {navItems.map((item) => {
-          const active = activePage === item.label
-          return (
-            <button
-              key={item.label}
-              onClick={() => setActivePage(item.label)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13.5px] font-medium transition-all cursor-pointer group
-                ${active ? 'bg-stone-800 text-white' : 'text-stone-500 hover:bg-stone-50 hover:text-stone-800'}`}
-            >
-              <span className={active ? 'text-amber-400' : 'text-stone-400 group-hover:text-stone-600'}>
-                {item.icon}
-              </span>
-              <span className="flex-1 text-left">{item.label}</span>
-              {item.badge && (
-                <span className={`text-[11px] font-semibold px-1.5 py-0.5 rounded-full
-                  ${active ? 'bg-white/20 text-white' : 'bg-amber-100 text-amber-700'}`}>
-                  {item.badge}
-                </span>
-              )}
-              {active && <ChevronRight size={14} className="text-white/50" />}
-            </button>
-          )
-        })}
+        {NAV_ITEMS.map(({ label, icon: Icon }) => (
+          <button
+            key={label}
+            onClick={() => setActivePage(label)}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+              activePage === label
+                ? 'bg-amber-50 text-amber-600'
+                : 'text-stone-500 hover:bg-stone-50 hover:text-stone-700'
+            }`}
+          >
+            <Icon size={16} />
+            {label}
+          </button>
+        ))}
+
+        {/* Usuarios solo para admin */}
+        {isAdmin && (
+          <button
+            onClick={() => setActivePage('Usuarios')}
+            className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors ${
+              activePage === 'Usuarios'
+                ? 'bg-amber-50 text-amber-600'
+                : 'text-stone-500 hover:bg-stone-50 hover:text-stone-700'
+            }`}
+          >
+            <Users size={16} />
+            Usuarios
+          </button>
+        )}
       </nav>
 
-      {/* User section */}
+      {/* Footer - user info + logout */}
       <div className="px-3 py-4 border-t border-stone-100">
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-stone-50 cursor-pointer group">
-          <div className="w-7 h-7 rounded-full bg-stone-200 flex items-center justify-center shrink-0">
-            <span className="text-[11px] font-semibold text-stone-600">A</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12.5px] font-semibold text-stone-700 leading-none truncate">Admin</p>
-            <p className="text-[11px] text-stone-400 leading-none mt-0.5 truncate">admin@market.cl</p>
-          </div>
-          <LogOut size={14} className="text-stone-300 group-hover:text-stone-500 shrink-0" />
+        <div className="px-3 py-2 mb-1">
+          <p className="text-[12.5px] font-medium text-stone-700 truncate">{user?.name}</p>
+          <p className="text-[11px] text-stone-400 truncate">{user?.email}</p>
+          <span className={`inline-block mt-1 text-[10.5px] px-2 py-0.5 rounded-full font-medium ${
+            user?.role === 'admin'
+              ? 'bg-amber-100 text-amber-700'
+              : 'bg-stone-100 text-stone-500'
+          }`}>
+            {user?.role === 'admin' ? 'Administrador' : 'Cajero'}
+          </span>
         </div>
+        <button
+          onClick={logout}
+          className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium text-stone-500 hover:bg-red-50 hover:text-red-500 transition-colors"
+        >
+          <LogOut size={15} />
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   )

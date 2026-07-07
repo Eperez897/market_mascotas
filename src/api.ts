@@ -1,8 +1,5 @@
 import type { Product, Category } from './types'
 
-// En dev, Vite hace proxy de /api hacia el backend (ver vite.config.ts).
-// En producción (Render), se usa la URL completa del backend definida
-// en la variable de entorno VITE_API_URL.
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 
 type RawDoc = { _id: string; [key: string]: unknown }
@@ -11,10 +8,12 @@ function toProduct(doc: RawDoc): Product {
   return {
     id: doc._id,
     name: doc.name as string,
-    category: doc.category as string,
-    stock: doc.stock as number,
-    price: doc.price as number,
-    sold: doc.sold as number,
+    sku: (doc.sku as string) ?? '',
+    barcode: (doc.barcode as string) ?? '',
+    category: (doc.category as string) ?? '',
+    stock: (doc.stock as number) ?? 0,
+    price: (doc.price as number) ?? 0,
+    sold: (doc.sold as number) ?? 0,
   }
 }
 
@@ -22,9 +21,16 @@ function toCategory(doc: RawDoc): Category {
   return { id: doc._id, name: doc.name as string }
 }
 
+function getToken(): string {
+  return localStorage.getItem('mm_token') ?? ''
+}
+
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getToken()}`,
+    },
     ...options,
   })
   if (!res.ok) {

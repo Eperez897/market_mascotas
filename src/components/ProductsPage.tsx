@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { Search, Plus, Package, Pencil, Trash2 } from 'lucide-react'
+import { Search, Package, Plus } from 'lucide-react'
 import { formatCLP, type Product } from '../types'
-import { ProductModal } from './ProductModal'
-import { DeleteProductModal } from './DeleteProductModal'
+import { AddProductModal } from './AddProductModal'
 import { productsApi } from '../api'
 
 interface StockBarProps {
@@ -23,58 +22,41 @@ function StockBar({ value }: StockBarProps) {
   )
 }
 
-type ModalState =
-  | { mode: 'add' }
-  | { mode: 'edit'; product: Product }
-  | { mode: 'delete'; product: Product }
-  | null
-
 interface ProductsPageProps {
   products: Product[]
   setProducts: React.Dispatch<React.SetStateAction<Product[]>>
-  categories: string[]
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void
 }
 
-export function ProductsPage({ products, setProducts, categories, showToast }: ProductsPageProps) {
-  const [modal, setModal] = useState<ModalState>(null)
+export function ProductsPage({ products, setProducts, showToast }: ProductsPageProps) {
   const [search, setSearch] = useState('')
+  const [showAddModal, setShowAddModal] = useState(false)
 
   const filtered = products.filter(
     (p) =>
       p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.category.toLowerCase().includes(search.toLowerCase())
+      p.category.toLowerCase().includes(search.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(search.toLowerCase()) ||
+      p.barcode?.toLowerCase().includes(search.toLowerCase())
   )
 
-  async function handleSave(data: Omit<Product, 'id'> & { id?: string }) {
+  async function handleAdd(data: Pick<Product, 'name' | 'sku' | 'barcode'>) {
     try {
-      if (data.id) {
-        const updated = await productsApi.update(data.id, data)
-        setProducts((prev) => prev.map((p) => (p.id === updated.id ? updated : p)))
-        showToast('Producto actualizado', 'success')
-      } else {
-        const created = await productsApi.create(data)
-        setProducts((prev) => [created, ...prev])
-        showToast('Producto agregado', 'success')
-      }
-      setModal(null)
+      const created = await productsApi.create({
+        name: data.name,
+        sku: data.sku,
+        barcode: data.barcode,
+        category: '',
+        stock: 0,
+        price: 0,
+        sold: 0,
+      })
+      setProducts((prev) => [created, ...prev])
+      showToast('Producto agregado', 'success')
+      setShowAddModal(false)
     } catch (err) {
       showToast('No se pudo guardar el producto en MongoDB', 'error')
       console.error(err)
-    }
-  }
-
-  async function handleDelete() {
-    if (modal?.mode !== 'delete') return
-    try {
-      await productsApi.remove(modal.product.id)
-      setProducts((prev) => prev.filter((p) => p.id !== modal.product.id))
-      showToast('Producto eliminado', 'info')
-    } catch (err) {
-      showToast('No se pudo eliminar el producto en MongoDB', 'error')
-      console.error(err)
-    } finally {
-      setModal(null)
     }
   }
 
@@ -87,7 +69,7 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
           <p className="text-[13px] text-stone-400 mt-0.5">{products.length} productos en catálogo</p>
         </div>
         <button
-          onClick={() => setModal({ mode: 'add' })}
+          onClick={() => setShowAddModal(true)}
           className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-xl hover:bg-stone-700 transition-colors cursor-pointer"
         >
           <Plus size={15} />
@@ -101,7 +83,7 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar producto…"
+          placeholder="Buscar producto, SKU o código…"
           className="w-full pl-8 pr-4 py-2 text-[13px] bg-white border border-stone-200 rounded-lg outline-none focus:border-stone-400 transition-colors"
         />
       </div>
@@ -111,7 +93,7 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
         <table className="w-full">
           <thead>
             <tr className="border-b border-stone-100">
-              {['Producto', 'Categoría', 'Vendidos', 'Stock', 'Precio', ''].map((h) => (
+              {['Producto', 'SKU', 'Código de barras', 'Categoría', 'Vendidos', 'Stock', 'Precio'].map((h) => (
                 <th
                   key={h}
                   className="text-left text-[11.5px] font-semibold text-stone-400 uppercase tracking-wider px-6 py-3"
@@ -124,7 +106,7 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
           <tbody className="divide-y divide-stone-50">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-6 py-10 text-center text-[13px] text-stone-400">
+                <td colSpan={7} className="px-6 py-10 text-center text-[13px] text-stone-400">
                   {products.length === 0
                     ? 'Aún no hay productos. Agrega el primero con el botón de arriba.'
                     : 'No se encontraron productos.'}
@@ -132,7 +114,7 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
               </tr>
             ) : (
               filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-stone-50/60 transition-colors group relative">
+                <tr key={p.id} className="hover:bg-stone-50/60 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center shrink-0">
@@ -141,9 +123,11 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
                       <span className="text-[13px] font-medium text-stone-700">{p.name}</span>
                     </div>
                   </td>
+                  <td className="px-6 py-4 text-[13px] text-stone-500">{p.sku || '—'}</td>
+                  <td className="px-6 py-4 text-[13px] text-stone-500">{p.barcode || '—'}</td>
                   <td className="px-6 py-4">
                     <span className="text-[12px] font-medium px-2.5 py-1 rounded-full bg-stone-100 text-stone-600">
-                      {p.category}
+                      {p.category || 'Sin categoría'}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-[13px] font-semibold text-stone-700">{p.sold}</td>
@@ -151,24 +135,6 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
                     <StockBar value={p.stock} />
                   </td>
                   <td className="px-6 py-4 text-[13px] font-semibold text-stone-700">{formatCLP(p.price)}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
-                        onClick={() => setModal({ mode: 'edit', product: p })}
-                        className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-stone-100 transition-colors cursor-pointer"
-                        title="Editar"
-                      >
-                        <Pencil size={13} className="text-stone-500" />
-                      </button>
-                      <button
-                        onClick={() => setModal({ mode: 'delete', product: p })}
-                        className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-rose-50 transition-colors cursor-pointer"
-                        title="Eliminar"
-                      >
-                        <Trash2 size={13} className="text-rose-500" />
-                      </button>
-                    </div>
-                  </td>
                 </tr>
               ))
             )}
@@ -176,20 +142,9 @@ export function ProductsPage({ products, setProducts, categories, showToast }: P
         </table>
       </div>
 
-      {/* Modales */}
-      {modal?.mode === 'add' && (
-        <ProductModal categories={categories} onSave={handleSave} onClose={() => setModal(null)} />
-      )}
-      {modal?.mode === 'edit' && (
-        <ProductModal
-          product={modal.product}
-          categories={categories}
-          onSave={handleSave}
-          onClose={() => setModal(null)}
-        />
-      )}
-      {modal?.mode === 'delete' && (
-        <DeleteProductModal product={modal.product} onConfirm={handleDelete} onClose={() => setModal(null)} />
+      {/* Modal de agregar */}
+      {showAddModal && (
+        <AddProductModal onSave={handleAdd} onClose={() => setShowAddModal(false)} />
       )}
     </div>
   )
