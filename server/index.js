@@ -22,7 +22,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 
 async function start() {
   await connectDB()
-  app.listen(PORT, () => {
+  app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`)
   })
 }
