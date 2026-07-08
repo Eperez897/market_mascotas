@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Search, Package, Plus } from 'lucide-react'
+import { Search, Package, Plus, Pencil, Trash2, Loader2 } from 'lucide-react'
 import { formatCLP, type Product } from '../types'
 import { AddProductModal } from './AddProductModal'
+import { EditProductModal } from './EditProductModal'
 import { productsApi } from '../api'
 
 interface StockBarProps {
@@ -31,6 +32,8 @@ interface ProductsPageProps {
 export function ProductsPage({ products, setProducts, showToast }: ProductsPageProps) {
   const [search, setSearch] = useState('')
   const [showAddModal, setShowAddModal] = useState(false)
+  const [editProduct, setEditProduct] = useState<Product | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const filtered = products.filter(
     (p) =>
@@ -55,14 +58,47 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
       showToast('Producto agregado', 'success')
       setShowAddModal(false)
     } catch (err) {
-      showToast('No se pudo guardar el producto en MongoDB', 'error')
+      showToast('No se pudo guardar el producto', 'error')
       console.error(err)
+    }
+  }
+
+  async function handleEdit(id: string, data: Pick<Product, 'name' | 'sku' | 'barcode'>) {
+    try {
+      const original = products.find(p => p.id === id)!
+      const updated = await productsApi.update(id, {
+        ...original,
+        name: data.name,
+        sku: data.sku,
+        barcode: data.barcode,
+      })
+      setProducts(prev => prev.map(p => p.id === id ? updated : p))
+      showToast('Producto actualizado', 'success')
+      setEditProduct(null)
+    } catch (err) {
+      showToast('No se pudo actualizar el producto', 'error')
+      console.error(err)
+    }
+  }
+
+  async function handleDelete(id: string, name: string) {
+    if (!confirm(`¿Eliminar "${name}"? Esta acción no se puede deshacer.`)) return
+    setDeletingId(id)
+    try {
+      await productsApi.remove(id)
+      setProducts(prev => prev.filter(p => p.id !== id))
+      showToast('Producto eliminado', 'success')
+    } catch (err) {
+      showToast('No se pudo eliminar el producto', 'error')
+      console.error(err)
+    } finally {
+      setDeletingId(null)
     }
   }
 
   return (
     <div className="space-y-5">
-      {/* Header de sección */}
+      {/* Header */}
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-[22px] font-semibold text-stone-800 leading-tight">Productos</h1>
@@ -70,7 +106,7 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
         </div>
         <button
           onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-xl hover:bg-stone-700 transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-xl hover:bg-stone-700 transition-colors"
         >
           <Plus size={15} />
           Agregar producto
@@ -93,7 +129,7 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
         <table className="w-full">
           <thead>
             <tr className="border-b border-stone-100">
-              {['Producto', 'SKU', 'Código de barras', 'Categoría', 'Vendidos', 'Stock', 'Precio'].map((h) => (
+              {['Producto', 'SKU', 'Código de barras', 'Categoría', 'Vendidos', 'Stock', 'Precio', ''].map((h) => (
                 <th
                   key={h}
                   className="text-left text-[11.5px] font-semibold text-stone-400 uppercase tracking-wider px-6 py-3"
@@ -106,7 +142,7 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
           <tbody className="divide-y divide-stone-50">
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-6 py-10 text-center text-[13px] text-stone-400">
+                <td colSpan={8} className="px-6 py-10 text-center text-[13px] text-stone-400">
                   {products.length === 0
                     ? 'Aún no hay productos. Agrega el primero con el botón de arriba.'
                     : 'No se encontraron productos.'}
@@ -114,7 +150,7 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
               </tr>
             ) : (
               filtered.map((p) => (
-                <tr key={p.id} className="hover:bg-stone-50/60 transition-colors">
+                <tr key={p.id} className="hover:bg-stone-50/60 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center shrink-0">
@@ -135,6 +171,28 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
                     <StockBar value={p.stock} />
                   </td>
                   <td className="px-6 py-4 text-[13px] font-semibold text-stone-700">{formatCLP(p.price)}</td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => setEditProduct(p)}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-amber-500 hover:bg-amber-50 transition-colors"
+                        title="Editar"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id, p.name)}
+                        disabled={deletingId === p.id}
+                        className="p-1.5 rounded-lg text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors disabled:opacity-40"
+                        title="Eliminar"
+                      >
+                        {deletingId === p.id
+                          ? <Loader2 size={14} className="animate-spin" />
+                          : <Trash2 size={14} />
+                        }
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}
@@ -142,9 +200,16 @@ export function ProductsPage({ products, setProducts, showToast }: ProductsPageP
         </table>
       </div>
 
-      {/* Modal de agregar */}
       {showAddModal && (
         <AddProductModal onSave={handleAdd} onClose={() => setShowAddModal(false)} />
+      )}
+
+      {editProduct && (
+        <EditProductModal
+          product={editProduct}
+          onSave={handleEdit}
+          onClose={() => setEditProduct(null)}
+        />
       )}
     </div>
   )

@@ -11,6 +11,8 @@ interface ProductModalProps {
 
 interface FormState {
   name: string
+  sku: string
+  barcode: string
   category: string
   stock: string
   price: string
@@ -20,6 +22,8 @@ export function ProductModal({ product, categories, onSave, onClose }: ProductMo
   const isEdit = Boolean(product?.id)
   const [form, setForm] = useState<FormState>({
     name: product?.name ?? '',
+    sku: product?.sku ?? '',
+    barcode: product?.barcode ?? '',
     category: product?.category ?? categories[0] ?? '',
     stock: product ? String(product.stock) : '',
     price: product ? String(product.price) : '',
@@ -41,6 +45,8 @@ export function ProductModal({ product, categories, onSave, onClose }: ProductMo
     onSave({
       id: product?.id,
       name: form.name.trim(),
+      sku: form.sku.trim(),
+      barcode: form.barcode.trim(),
       category: form.category,
       stock: Number(form.stock),
       price: Number(form.price),
@@ -79,6 +85,32 @@ export function ProductModal({ product, categories, onSave, onClose }: ProductMo
                 ${errors.name ? 'border-rose-400 bg-rose-50' : 'border-stone-200 focus:border-stone-400 bg-stone-50'}`}
             />
             {errors.name && <p className="text-[11.5px] text-rose-500 mt-1">{errors.name}</p>}
+          </div>
+
+          {/* SKU */}
+          <div>
+            <label className="block text-[12px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5">
+              SKU
+            </label>
+            <input
+              value={form.sku}
+              onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+              placeholder="Ej. PRD-001"
+              className="w-full px-3.5 py-2.5 text-[13.5px] rounded-lg border border-stone-200 bg-stone-50 outline-none focus:border-stone-400 transition-colors"
+            />
+          </div>
+
+          {/* Código de barras */}
+          <div>
+            <label className="block text-[12px] font-semibold text-stone-500 uppercase tracking-wider mb-1.5">
+              Código de barras
+            </label>
+            <input
+              value={form.barcode}
+              onChange={(e) => setForm((f) => ({ ...f, barcode: e.target.value }))}
+              placeholder="Ej. 7891234567890"
+              className="w-full px-3.5 py-2.5 text-[13.5px] rounded-lg border border-stone-200 bg-stone-50 outline-none focus:border-stone-400 transition-colors"
+            />
           </div>
 
           {/* Categoría */}
