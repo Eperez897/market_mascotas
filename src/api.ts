@@ -1,5 +1,4 @@
-import type { Product, Category } from './types'
-
+import type { Product, Category, AppNotification } from './types'
 const BASE_URL = `${import.meta.env.VITE_API_URL ?? ''}/api`
 
 type RawDoc = { _id: string; [key: string]: unknown }
@@ -144,5 +143,41 @@ export const invoicesApi = {
       method: 'PATCH',
       body: JSON.stringify({ reason }),
     })
+  },
+}
+
+interface RawNotification {
+  _id: string
+  type: AppNotification['type']
+  title: string
+  message: string
+  read: boolean
+  createdAt: string
+}
+
+function toNotification(doc: RawNotification): AppNotification {
+  return {
+    id: doc._id,
+    type: doc.type,
+    title: doc.title,
+    message: doc.message,
+    read: doc.read,
+    createdAt: doc.createdAt,
+  }
+}
+
+export const notificationsApi = {
+  async list(): Promise<{ notifications: AppNotification[]; unreadCount: number }> {
+    const data = await request<{ notifications: RawNotification[]; unreadCount: number }>('/notifications')
+    return { notifications: data.notifications.map(toNotification), unreadCount: data.unreadCount }
+  },
+  async markAsRead(id: string): Promise<void> {
+    await request(`/notifications/${id}/read`, { method: 'PATCH' })
+  },
+  async markAllAsRead(): Promise<void> {
+    await request('/notifications/read-all', { method: 'PATCH' })
+  },
+  async remove(id: string): Promise<void> {
+    await request(`/notifications/${id}`, { method: 'DELETE' })
   },
 }

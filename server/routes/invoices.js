@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { Invoice } from '../models/Invoice.js'
 import { Product } from '../models/Product.js'
 import { requireAuth } from '../middleware/auth.js'
+import { notify, checkLowStock } from '../utils/notify.js'
 
 export const invoicesRouter = Router()
 
@@ -85,10 +86,20 @@ invoicesRouter.post('/', requireAuth, async (req, res) => {
 
     // Descontar stock
     for (const item of items) {
-      await Product.findByIdAndUpdate(item.productId, {
-        $inc: { stock: -item.quantity, sold: item.quantity },
-      })
+      const updatedProduct = await Product.findByIdAndUpdate(
+        item.productId,
+        { $inc: { stock: -item.quantity, sold: item.quantity } },
+        { new: true }
+      )
+      if (updatedProduct) await checkLowStock(updatedProduct)
     }
+
+    await notify({
+      type: 'invoice_created',
+      title: 'Factura creada',
+      message: `Se creó la factura ${invoice.code} por un total de $${total.toLocaleString('es-CL')}`,
+      refId: invoice._id,
+    })
 
     const populated = await Invoice.findById(invoice._id)
       .populate('company', 'name rut')

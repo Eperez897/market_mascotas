@@ -27,3 +27,12 @@ export const DEFAULT_CATEGORIES = [
 export function formatCLP(n: number) {
   return '$' + Number(n).toLocaleString('es-CL')
 }
+
+export interface AppNotification {
+  id: string
+  type: 'low_stock' | 'invoice_created' | 'product_created' | 'category_created'
+  title: string
+  message: string
+  read: boolean
+  createdAt: string
+}

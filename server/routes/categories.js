@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { Category } from '../models/Category.js'
 import { requireAuth, requirePermission } from '../middleware/auth.js'
+import { notify } from '../utils/notify.js'
 
 export const categoriesRouter = Router()
 
@@ -13,17 +14,16 @@ categoriesRouter.get('/', requireAuth, async (req, res) => {
   }
 })
 
-categoriesRouter.post('/', requireAuth, requirePermission('manageCategories'), async (req, res) => {
-  try {
-    const { name } = req.body
-    const exists = await Category.findOne({ name: new RegExp(`^${name}$`, 'i') })
-    if (exists) return res.status(409).json({ error: 'Esa categoría ya existe' })
-    const category = await Category.create({ name })
-    res.status(201).json(category)
-  } catch (err) {
-    res.status(400).json({ error: 'Error al crear categoría', detail: err.message })
-  }
+const category = await Category.create({ name })
+
+await notify({
+  type: 'category_created',
+  title: 'Nueva categoría agregada',
+  message: `Se agregó la categoría "${category.name}"`,
+  refId: category._id,
 })
+
+res.status(201).json(category)
 
 categoriesRouter.delete('/:id', requireAuth, requirePermission('manageCategories'), async (req, res) => {
   try {
