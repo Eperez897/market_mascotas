@@ -1,26 +1,9 @@
 import { useEffect, useState } from 'react'
 import { X, Search, Plus, Trash2, Building2, Loader2 } from 'lucide-react'
-import { useAuth } from '../context/AuthContext'
 import { formatCLP } from '../types'
+import { productsApi, companiesApi, invoicesApi, type RawCompany, type RawInvoice } from '../api'
 
-interface Product {
-  id: string
-  name: string
-  sku: string
-  stock: number
-  price: number
-}
-
-interface Company {
-  _id: string
-  name: string
-  rut: string
-  address: string
-  phone: string
-  email: string
-}
-
-interface InvoiceItem {
+interface CartItem {
   productId: string
   productName: string
   productSku: string
@@ -30,28 +13,25 @@ interface InvoiceItem {
 }
 
 interface Props {
-  onSave: (invoice: any) => void
+  onSave: (invoice: RawInvoice) => void
   onClose: () => void
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
 export function NewInvoiceModal({ onSave, onClose, showToast }: Props) {
-  const { token } = useAuth()
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-
   const [code, setCode] = useState('')
   const [comment, setComment] = useState('')
-  const [items, setItems] = useState<InvoiceItem[]>([])
+  const [items, setItems] = useState<CartItem[]>([])
   const [saving, setSaving] = useState(false)
 
   // Productos
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<{ id: string; name: string; sku: string; stock: number; price: number }[]>([])
   const [productSearch, setProductSearch] = useState('')
   const [showProductSearch, setShowProductSearch] = useState(false)
 
   // Empresas
-  const [companies, setCompanies] = useState<Company[]>([])
-  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null)
+  const [companies, setCompanies] = useState<RawCompany[]>([])
+  const [selectedCompany, setSelectedCompany] = useState<RawCompany | null>(null)
   const [showCompanyPanel, setShowCompanyPanel] = useState(false)
   const [companySearch, setCompanySearch] = useState('')
   const [newCompany, setNewCompany] = useState({ name: '', rut: '', address: '', phone: '', email: '' })
@@ -59,10 +39,10 @@ export function NewInvoiceModal({ onSave, onClose, showToast }: Props) {
   const [savingCompany, setSavingCompany] = useState(false)
 
   useEffect(() => {
-    fetch('/api/products', { headers }).then(r => r.json()).then(data =>
-      setProducts(data.map((p: any) => ({ id: p._id, name: p.name, sku: p.sku ?? '', stock: p.stock, price: p.price })))
+    productsApi.list().then(data =>
+      setProducts(data.map(p => ({ id: p.id, name: p.name, sku: p.sku, stock: p.stock, price: p.price })))
     )
-    fetch('/api/companies', { headers }).then(r => r.json()).then(setCompanies)
+    companiesApi.list().then(setCompanies)
   }, [])
 
   const filteredProducts = products.filter(p =>
@@ -75,9 +55,8 @@ export function NewInvoiceModal({ onSave, onClose, showToast }: Props) {
     c.rut.toLowerCase().includes(companySearch.toLowerCase())
   )
 
-  function addProduct(p: Product) {
-    const exists = items.find(i => i.productId === p.id)
-    if (exists) {
+  function addProduct(p: typeof products[0]) {
+    if (items.find(i => i.productId === p.id)) {
       showToast('Producto ya agregado', 'info')
       return
     }
@@ -97,8 +76,7 @@ export function NewInvoiceModal({ onSave, onClose, showToast }: Props) {
     setItems(prev => prev.map((item, i) => {
       if (i !== idx) return item
       if (field === 'quantity') {
-        const qty = Math.max(1, Math.min(item.stock, Math.floor(value)))
-        return { ...item, quantity: qty }
+        return { ...item, quantity: Math.max(1, Math.min(item.stock, Math.floor(value))) }
       }
       return { ...item, unitPrice: Math.max(0, value) }
     }))
@@ -117,9 +95,7 @@ export function NewInvoiceModal({ onSave, onClose, showToast }: Props) {
     }
     setSavingCompany(true)
     try {
-      const res = await fetch('/api/companies', { method: 'POST', headers, body: JSON.stringify(newCompany) })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      const data = await companiesApi.create(newCompany)
       setCompanies(prev => [...prev, data])
       setSelectedCompany(data)
       setShowNewCompany(false)
@@ -138,22 +114,16 @@ export function NewInvoiceModal({ onSave, onClose, showToast }: Props) {
 
     setSaving(true)
     try {
-      const res = await fetch('/api/invoices', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          code: code.trim(),
-          companyId: selectedCompany?._id ?? null,
-          items: items.map(i => ({
-            productId: i.productId,
-            quantity: i.quantity,
-            unitPrice: i.unitPrice,
-          })),
-          comment,
-        }),
+      const data = await invoicesApi.create({
+        code: code.trim(),
+        companyId: selectedCompany?._id ?? null,
+        items: items.map(i => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+        })),
+        comment,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
       onSave(data)
     } catch (err) {
       showToast(err instanceof Error ? err.message : 'Error al crear factura', 'error')

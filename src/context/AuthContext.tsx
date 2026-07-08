@@ -7,18 +7,37 @@ export interface UserPermissions {
   manageCategories: boolean
 }
 
+export interface AuthCompany {
+  id: string
+  name: string
+  rut: string
+}
+
 export interface AuthUser {
   id: string
   name: string
   email: string
   role: 'admin' | 'cajero'
   permissions: UserPermissions
+  company?: AuthCompany
+}
+
+export interface RegisterData {
+  companyName: string
+  companyRut: string
+  companyAddress?: string
+  companyPhone?: string
+  companyEmail?: string
+  name: string
+  email: string
+  password: string
 }
 
 interface AuthContextType {
   user: AuthUser | null
   token: string | null
   login: (email: string, password: string) => Promise<void>
+  register: (data: RegisterData) => Promise<void>
   logout: () => void
   isAdmin: boolean
   can: (permission: keyof UserPermissions) => boolean
@@ -39,21 +58,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  async function login(email: string, password: string) {
-  const base = import.meta.env.VITE_API_URL ?? ''
-  const res = await fetch(`${base}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password }),
-  })
-  const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión')
+  function applySession(data: { token: string; user: AuthUser }) {
+    localStorage.setItem('mm_token', data.token)
+    localStorage.setItem('mm_user', JSON.stringify(data.user))
+    setToken(data.token)
+    setUser(data.user)
+  }
 
-  localStorage.setItem('mm_token', data.token)
-  localStorage.setItem('mm_user', JSON.stringify(data.user))
-  setToken(data.token)
-  setUser(data.user)
-}
+  async function login(email: string, password: string) {
+    const base = import.meta.env.VITE_API_URL ?? ''
+    const res = await fetch(`${base}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión')
+    applySession(data)
+  }
+
+  async function register(payload: RegisterData) {
+    const base = import.meta.env.VITE_API_URL ?? ''
+    const res = await fetch(`${base}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Error al crear la cuenta')
+    applySession(data)
+  }
 
   function logout() {
     localStorage.removeItem('mm_token')
@@ -71,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, isAdmin, can }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, isAdmin, can }}>
       {children}
     </AuthContext.Provider>
   )
