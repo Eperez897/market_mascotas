@@ -80,3 +80,69 @@ export const categoriesApi = {
     await request(`/categories/${id}`, { method: 'DELETE' })
   },
 }
+
+export interface RawCompany {
+  _id: string
+  name: string
+  rut: string
+  address: string
+  phone: string
+  email: string
+}
+
+export interface RawInvoice {
+  _id: string
+  code: string
+  company: { _id: string; name: string; rut: string } | null
+  companyName: string
+  items: {
+    product: string
+    productName: string
+    productSku: string
+    quantity: number
+    unitPrice: number
+    subtotal: number
+  }[]
+  total: number
+  comment: string
+  status: 'active' | 'cancelled'
+  cancelReason: string
+  cancelledAt: string | null
+  createdBy: { name: string }
+  createdAt: string
+}
+
+export const companiesApi = {
+  async list(): Promise<RawCompany[]> {
+    return request<RawCompany[]>('/companies')
+  },
+  async create(data: Omit<RawCompany, '_id'>): Promise<RawCompany> {
+    return request<RawCompany>('/companies', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  },
+}
+
+export const invoicesApi = {
+  async list(): Promise<RawInvoice[]> {
+    return request<RawInvoice[]>('/invoices')
+  },
+  async create(payload: {
+    code: string
+    companyId: string | null
+    items: { productId: string; quantity: number; unitPrice: number }[]
+    comment: string
+  }): Promise<RawInvoice> {
+    return request<RawInvoice>('/invoices', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    })
+  },
+  async cancel(id: string, reason: string): Promise<RawInvoice> {
+    return request<RawInvoice>(`/invoices/${id}/cancel`, {
+      method: 'PATCH',
+      body: JSON.stringify({ reason }),
+    })
+  },
+}

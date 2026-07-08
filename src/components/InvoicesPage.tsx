@@ -3,30 +3,7 @@ import { Plus, Search, Eye, XCircle, ChevronUp, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { formatCLP } from '../types'
 import { NewInvoiceModal } from './NewInvoiceModal'
-
-interface InvoiceItem {
-  product: string
-  productName: string
-  productSku: string
-  quantity: number
-  unitPrice: number
-  subtotal: number
-}
-
-interface Invoice {
-  _id: string
-  code: string
-  company: { _id: string; name: string; rut: string } | null
-  companyName: string
-  items: InvoiceItem[]
-  total: number
-  comment: string
-  status: 'active' | 'cancelled'
-  cancelReason: string
-  cancelledAt: string | null
-  createdBy: { name: string }
-  createdAt: string
-}
+import { invoicesApi, type RawInvoice } from '../api'
 
 interface Props {
   showToast: (msg: string, type?: 'success' | 'error' | 'info') => void
@@ -34,23 +11,20 @@ interface Props {
 }
 
 export function InvoicesPage({ showToast, onStockChange }: Props) {
-  const { token, can } = useAuth()
+  const { can } = useAuth()
   const canCreate = can('createInvoices')
 
-  const [invoices, setInvoices] = useState<Invoice[]>([])
+  const [invoices, setInvoices] = useState<RawInvoice[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [showNew, setShowNew] = useState(false)
   const [cancellingId, setCancellingId] = useState<string | null>(null)
 
-  const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
-
   async function load() {
     setLoading(true)
     try {
-      const res = await fetch('/api/invoices', { headers })
-      const data = await res.json()
+      const data = await invoicesApi.list()
       setInvoices(data)
     } catch {
       showToast('Error al cargar facturas', 'error')
@@ -66,13 +40,7 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
     if (reason === null) return
     setCancellingId(id)
     try {
-      const res = await fetch(`/api/invoices/${id}/cancel`, {
-        method: 'PATCH',
-        headers,
-        body: JSON.stringify({ reason }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error)
+      const data = await invoicesApi.cancel(id, reason)
       setInvoices(prev => prev.map(inv => inv._id === id ? data : inv))
       showToast('Factura anulada', 'success')
       onStockChange()
@@ -83,7 +51,7 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
     }
   }
 
-  function handleNewInvoice(invoice: Invoice) {
+  function handleNewInvoice(invoice: RawInvoice) {
     setInvoices(prev => [invoice, ...prev])
     showToast('Factura creada', 'success')
     setShowNew(false)
