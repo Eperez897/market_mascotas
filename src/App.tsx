@@ -11,6 +11,7 @@ import { ProductsPage } from './components/ProductsPage'
 import { CategoriesPage } from './components/CategoriesPage'
 import { UsersPage } from './components/UsersPage'
 import { LoginPage } from './components/LoginPage'
+import { InvoicesPage } from './components/InvoicesPage'
 import { Toast } from './components/Toast'
 import type { Product, Category } from './types'
 import { productsApi, categoriesApi } from './api'
@@ -73,6 +74,15 @@ function App() {
     setTimeout(() => setToast(null), 2500)
   }
 
+  async function refreshProducts() {
+    try {
+      const data = await productsApi.list()
+      setProducts(data)
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
   useEffect(() => {
     if (!user) return
     async function loadData() {
@@ -107,7 +117,7 @@ function App() {
       case 'Panel principal':
         return <DashboardPage products={products} />
       case 'Productos':
-  return <ProductsPage products={products} setProducts={setProducts} showToast={showToast} />
+        return <ProductsPage products={products} setProducts={setProducts} showToast={showToast} />
       case 'Categorías':
         return (
           <CategoriesPage
@@ -115,6 +125,13 @@ function App() {
             setCategories={setCategories}
             products={products}
             showToast={showToast}
+          />
+        )
+      case 'Facturas':
+        return (
+          <InvoicesPage
+            showToast={showToast}
+            onStockChange={refreshProducts}
           />
         )
       case 'Usuarios':
