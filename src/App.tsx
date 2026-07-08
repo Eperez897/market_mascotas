@@ -12,6 +12,7 @@ import { CategoriesPage } from './components/CategoriesPage'
 import { UsersPage } from './components/UsersPage'
 import { LoginPage } from './components/LoginPage'
 import { InvoicesPage } from './components/InvoicesPage'
+import { POSPage } from './components/POSPage'
 import { Toast } from './components/Toast'
 import type { Product, Category } from './types'
 import { productsApi, categoriesApi } from './api'
@@ -130,6 +131,13 @@ function App() {
       case 'Facturas':
         return (
           <InvoicesPage
+            showToast={showToast}
+            onStockChange={refreshProducts}
+          />
+        )
+      case 'Punto de venta':
+        return (
+          <POSPage
             showToast={showToast}
             onStockChange={refreshProducts}
           />
