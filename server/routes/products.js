@@ -1,10 +1,10 @@
 import { Router } from 'express'
 import { Product } from '../models/Product.js'
+import { requireAuth, requirePermission } from '../middleware/auth.js'
 
 export const productsRouter = Router()
 
-
-productsRouter.get('/', async (req, res) => {
+productsRouter.get('/', requireAuth, async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 })
     res.json(products)
@@ -13,8 +13,7 @@ productsRouter.get('/', async (req, res) => {
   }
 })
 
-
-productsRouter.post('/', async (req, res) => {
+productsRouter.post('/', requireAuth, requirePermission('modifyProducts'), async (req, res) => {
   try {
     const { name, sku, barcode, category, stock, price, sold } = req.body
     const product = await Product.create({ name, sku, barcode, category, stock, price, sold })
@@ -24,8 +23,7 @@ productsRouter.post('/', async (req, res) => {
   }
 })
 
-
-productsRouter.put('/:id', async (req, res) => {
+productsRouter.put('/:id', requireAuth, requirePermission('modifyProducts'), async (req, res) => {
   try {
     const { name, sku, barcode, category, stock, price, sold } = req.body
     const product = await Product.findByIdAndUpdate(
@@ -40,7 +38,7 @@ productsRouter.put('/:id', async (req, res) => {
   }
 })
 
-productsRouter.delete('/:id', async (req, res) => {
+productsRouter.delete('/:id', requireAuth, requirePermission('modifyProducts'), async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id)
     if (!product) return res.status(404).json({ error: 'Producto no encontrado' })

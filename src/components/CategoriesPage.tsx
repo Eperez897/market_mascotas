@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Tag, Plus, Trash2, Package } from 'lucide-react'
 import type { Product, Category } from '../types'
 import { categoriesApi } from '../api'
+import { useAuth } from '../context/AuthContext'
 
 interface CategoriesPageProps {
   categories: Category[]
@@ -11,6 +12,9 @@ interface CategoriesPageProps {
 }
 
 export function CategoriesPage({ categories, setCategories, products, showToast }: CategoriesPageProps) {
+  const { can } = useAuth()
+  const canManage = can('manageCategories')
+
   const [newCategory, setNewCategory] = useState('')
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
@@ -57,7 +61,7 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
 
   return (
     <div className="space-y-5">
-      {/* Header de sección */}
+      {/* Header */}
       <div className="flex items-end justify-between">
         <div>
           <h1 className="text-[22px] font-semibold text-stone-800 leading-tight">Categorías</h1>
@@ -67,28 +71,30 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
         </div>
       </div>
 
-      {/* Agregar categoría */}
-      <div className="bg-white rounded-xl border border-stone-200 p-5">
-        <label className="block text-[12px] font-semibold text-stone-500 uppercase tracking-wider mb-2">
-          Nueva categoría
-        </label>
-        <div className="flex gap-2 max-w-md">
-          <input
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-            placeholder="Ej. Ropa, Electrónica, Ferretería…"
-            className="flex-1 px-3.5 py-2.5 text-[13.5px] rounded-lg border border-stone-200 bg-stone-50 outline-none focus:border-stone-400 transition-colors"
-          />
-          <button
-            onClick={handleAdd}
-            className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-lg hover:bg-stone-700 transition-colors cursor-pointer"
-          >
-            <Plus size={15} />
-            Agregar
-          </button>
+      {/* Agregar categoría — solo si tiene permiso */}
+      {canManage && (
+        <div className="bg-white rounded-xl border border-stone-200 p-5">
+          <label className="block text-[12px] font-semibold text-stone-500 uppercase tracking-wider mb-2">
+            Nueva categoría
+          </label>
+          <div className="flex gap-2 max-w-md">
+            <input
+              value={newCategory}
+              onChange={(e) => setNewCategory(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+              placeholder="Ej. Ropa, Electrónica, Ferretería…"
+              className="flex-1 px-3.5 py-2.5 text-[13.5px] rounded-lg border border-stone-200 bg-stone-50 outline-none focus:border-stone-400 transition-colors"
+            />
+            <button
+              onClick={handleAdd}
+              className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-lg hover:bg-stone-700 transition-colors cursor-pointer"
+            >
+              <Plus size={15} />
+              Agregar
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Lista de categorías */}
       <div className="bg-white rounded-xl border border-stone-200 overflow-hidden">
@@ -113,30 +119,32 @@ export function CategoriesPage({ categories, setCategories, products, showToast 
                   </div>
                 </div>
 
-                {confirmDelete === cat.id ? (
-                  <div className="flex items-center gap-2">
-                    <span className="text-[12px] text-stone-500">¿Eliminar?</span>
+                {canManage && (
+                  confirmDelete === cat.id ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-[12px] text-stone-500">¿Eliminar?</span>
+                      <button
+                        onClick={() => handleDelete(cat)}
+                        className="px-3 py-1.5 text-[12px] font-semibold text-white bg-rose-500 rounded-md hover:bg-rose-600 transition-colors cursor-pointer"
+                      >
+                        Sí
+                      </button>
+                      <button
+                        onClick={() => setConfirmDelete(null)}
+                        className="px-3 py-1.5 text-[12px] font-medium text-stone-600 bg-white border border-stone-200 rounded-md hover:bg-stone-100 transition-colors cursor-pointer"
+                      >
+                        No
+                      </button>
+                    </div>
+                  ) : (
                     <button
-                      onClick={() => handleDelete(cat)}
-                      className="px-3 py-1.5 text-[12px] font-semibold text-white bg-rose-500 rounded-md hover:bg-rose-600 transition-colors cursor-pointer"
+                      onClick={() => setConfirmDelete(cat.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
+                      title="Eliminar categoría"
                     >
-                      Sí
+                      <Trash2 size={13} className="text-rose-500" />
                     </button>
-                    <button
-                      onClick={() => setConfirmDelete(null)}
-                      className="px-3 py-1.5 text-[12px] font-medium text-stone-600 bg-white border border-stone-200 rounded-md hover:bg-stone-100 transition-colors cursor-pointer"
-                    >
-                      No
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setConfirmDelete(cat.id)}
-                    className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-rose-50 opacity-0 group-hover:opacity-100 transition-all cursor-pointer"
-                    title="Eliminar categoría"
-                  >
-                    <Trash2 size={13} className="text-rose-500" />
-                  </button>
+                  )
                 )}
               </div>
             ))}

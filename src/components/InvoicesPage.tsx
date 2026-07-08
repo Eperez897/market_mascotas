@@ -34,7 +34,9 @@ interface Props {
 }
 
 export function InvoicesPage({ showToast, onStockChange }: Props) {
-  const { token } = useAuth()
+  const { token, can } = useAuth()
+  const canCreate = can('createInvoices')
+
   const [invoices, setInvoices] = useState<Invoice[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -103,13 +105,15 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
           <h1 className="text-[22px] font-semibold text-stone-800 leading-tight">Facturas</h1>
           <p className="text-[13px] text-stone-400 mt-0.5">{invoices.length} facturas en total</p>
         </div>
-        <button
-          onClick={() => setShowNew(true)}
-          className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-xl hover:bg-stone-700 transition-colors"
-        >
-          <Plus size={15} />
-          Nueva factura
-        </button>
+        {canCreate && (
+          <button
+            onClick={() => setShowNew(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-stone-800 text-white text-[13px] font-semibold rounded-xl hover:bg-stone-700 transition-colors"
+          >
+            <Plus size={15} />
+            Nueva factura
+          </button>
+        )}
       </div>
 
       {/* Buscador */}
@@ -177,7 +181,7 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
                   >
                     {expandedId === inv._id ? <ChevronUp size={15} /> : <Eye size={15} />}
                   </button>
-                  {inv.status === 'active' && (
+                  {inv.status === 'active' && canCreate && (
                     <button
                       onClick={() => handleCancel(inv._id)}
                       disabled={cancellingId === inv._id}
@@ -196,7 +200,6 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
               {/* Detalle expandido */}
               {expandedId === inv._id && (
                 <div className="border-t border-stone-100 px-5 py-4 bg-stone-50 space-y-3">
-                  {/* Productos */}
                   <table className="w-full">
                     <thead>
                       <tr>
@@ -220,7 +223,6 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
                     </tbody>
                   </table>
 
-                  {/* Total + comentario */}
                   <div className="flex items-start justify-between pt-2 border-t border-stone-200">
                     <div>
                       {inv.comment && (
@@ -246,7 +248,7 @@ export function InvoicesPage({ showToast, onStockChange }: Props) {
         </div>
       )}
 
-      {showNew && (
+      {canCreate && showNew && (
         <NewInvoiceModal
           onSave={handleNewInvoice}
           onClose={() => setShowNew(false)}
