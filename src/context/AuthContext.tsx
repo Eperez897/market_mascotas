@@ -40,19 +40,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function login(email: string, password: string) {
-    const res = await fetch('/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión')
+  const base = import.meta.env.VITE_API_URL ?? ''
+  const res = await fetch(`${base}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Error al iniciar sesión')
 
-    localStorage.setItem('mm_token', data.token)
-    localStorage.setItem('mm_user', JSON.stringify(data.user))
-    setToken(data.token)
-    setUser(data.user)
-  }
+  localStorage.setItem('mm_token', data.token)
+  localStorage.setItem('mm_user', JSON.stringify(data.user))
+  setToken(data.token)
+  setUser(data.user)
+}
 
   function logout() {
     localStorage.removeItem('mm_token')
